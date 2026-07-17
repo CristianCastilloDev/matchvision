@@ -1,0 +1,16 @@
+{
+  "name": "Premier League 2025/26",
+  "matches": [
+    {
+      "round": "Matchday 1",
+      "date": "2025-08-15",
+      "time": "20:00 UTC+1",
+      "team1": "Liverpool FC",
+      "team2": "AFC Bournemouth",
+      "score": {
+        "ft": [5, 2],
+        "ht": [2, 0]
+      }
+    }
+  ]
+}

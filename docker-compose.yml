@@ -1,0 +1,51 @@
+name: matchvision-ai
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-matchvision}
+      POSTGRES_USER: ${POSTGRES_USER:-matchvision}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-matchvision_dev}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-matchvision} -d ${POSTGRES_DB:-matchvision}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-matchvision}:${POSTGRES_PASSWORD:-matchvision_dev}@db:5432/${POSTGRES_DB:-matchvision}
+      CORS_ORIGINS: http://localhost:3000,http://localhost:3001
+      DATA_ROOT: /workspace/data
+      MODEL_ROOT: /workspace/models
+      SEED_DEMO_DATA: "true"
+    command: sh -c "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/workspace/data
+      - ./models:/workspace/models
+
+  frontend:
+    build:
+      context: ./frontend
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres_data:
